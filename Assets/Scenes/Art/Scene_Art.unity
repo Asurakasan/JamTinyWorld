@@ -7129,6 +7129,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Jar_01
       objectReference: {fileID: 0}
+    - target: {fileID: 13259234281416262, guid: 0fa3c3f221c729a49a85768e64ab5cd9, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 13259234281416263, guid: 0fa3c3f221c729a49a85768e64ab5cd9, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -8005,6 +8009,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Jar_04
       objectReference: {fileID: 0}
+    - target: {fileID: 6442834854414324749, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
 --- !u!1001 &7883628357514960089
@@ -8061,6 +8069,10 @@ PrefabInstance:
     - target: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
       propertyPath: m_Name
       value: Jar_03
+      objectReference: {fileID: 0}
+    - target: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
