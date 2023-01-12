@@ -12,8 +12,10 @@ public enum Type
 }
 public class DragDrop : MonoBehaviour
 {
+    public string nom;
     public Type type;
     public LayerMask layerMask; 
+    public LayerMask layerJar; 
     Vector3 offset;
     Plane plane = new Plane(Vector3.up, 0);
     public bool takeObject;
@@ -70,7 +72,8 @@ public class DragDrop : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.UpArrow))
             {
                 transform.position = new Vector3(transform.position.x, transform.position.y + 0.2f, transform.position.z);
-            }if (Input.GetKeyDown(KeyCode.DownArrow))
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow))
             {
                 transform.position = new Vector3(transform.position.x, transform.position.y - 0.2f, transform.position.z);
             }
