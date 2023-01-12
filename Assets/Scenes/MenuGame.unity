@@ -2849,6 +2849,7 @@ MonoBehaviour:
   Name: {fileID: 1052951361}
   Visu: {fileID: 481571599}
   ParentPrefab: {fileID: 840798393}
+  Tasks: []
 --- !u!114 &776999821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2867,27 +2868,44 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f09eae8c0ea04254b90c5386a034a225, type: 3}
     Description: poisson rouge de tres petite taille
     Tasks:
-    - Description: 'Nouri le poisson '
-    - Description: Mange Pierre
-    - Description: mets un arbre
+    - MoneyByTask: 1
+      Description: 'Nouri le poisson '
+      TaskEnded: 0
+    - MoneyByTask: 1
+      Description: Mange Pierre
+      TaskEnded: 0
+    - MoneyByTask: 1
+      Description: mets un arbre
+      TaskEnded: 0
   - Name: Paul
     Sprite: {fileID: 21300000, guid: f9161c6c9e06dc445ada3ee16d991f90, type: 3}
     Description: dfdfqdfq
     Tasks:
-    - Description: gdsgdsgdg
+    - MoneyByTask: 1
+      Description: gdsgdsgdg
+      TaskEnded: 0
   - Name: Jack
     Sprite: {fileID: 21300000, guid: 02800fb9cff14da47a04572790384d8b, type: 3}
     Description: 3
     Tasks:
-    - Description: 
+    - MoneyByTask: 1
+      Description: 3
+      TaskEnded: 0
   - Name: Jacki
     Sprite: {fileID: 21300000, guid: 144aa74618b85974a9a50f612c2fa8fd, type: 3}
     Description: 4
-    Tasks: []
+    Tasks:
+    - MoneyByTask: 4
+      Description: 4
+      TaskEnded: 0
   - Name: Michel
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Description: 5
-    Tasks: []
+    Tasks:
+    - MoneyByTask: 4
+      Description: 5
+      TaskEnded: 0
+  Money: 0
   CurrentAnimal:
     Name: Poisson
     Sprite: {fileID: 0}

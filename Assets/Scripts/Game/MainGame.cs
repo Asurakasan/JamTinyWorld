@@ -11,6 +11,7 @@ public class MainGame : MonoBehaviour
     //public List<Test> test;
     public GameObject PrefabTask;
     public List<Animal> Animals;
+    public int Money = 0;
     public Animal CurrentAnimal;
     private RequirementsUI _requirementsUI;
     private DescriptionUI _descriptionUI;
@@ -33,12 +34,14 @@ public class MainGame : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        _requirementsUI.UITaskEnded();
     }
     public void ClickNext()
     {
-        if(_currentAnimal+1 < Animals.Count)
-        _currentAnimal++;
+        _requirementsUI.Tasks.Clear();
+        _requirementsUI.CheckTaskEnded();
+        if (_currentAnimal + 1 < Animals.Count)
+            _currentAnimal++;
         CurrentAnimal = Animals[_currentAnimal];
         _requirementsUI.SwitchRequirement();
         _descriptionUI.SwitchContentDescription();
