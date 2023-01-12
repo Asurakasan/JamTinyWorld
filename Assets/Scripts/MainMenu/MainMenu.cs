@@ -13,6 +13,8 @@ public class MainMenu : MonoBehaviour
         Menu.SetActive(true);
         Credits.SetActive(false);
         Settings.SetActive(false);
+        StartCoroutine(AudioManager.Instance.IEPlayMusicSound("Music_Main_Jam_mixage final"));
+
     }
     public void ClickPlay()
     {
