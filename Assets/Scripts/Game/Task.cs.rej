@@ -1,0 +1,14 @@
+diff a/Assets/Scripts/Game/Task.cs b/Assets/Scripts/Game/Task.cs	(rejected hunks)
+@@ -1,11 +1,9 @@
+ using System;
+ using System.Collections.Generic;
+ using UnityEngine;
+-using TMPro;
++
+ [Serializable]
+ public class Task
+ {
+-    public int MoneyByTask;
+     public string Description;
+-    public bool TaskEnded = false;
+ }
