@@ -8,15 +8,14 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Mat_ShaderWind_Bamboo
-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+  m_Shader: {fileID: 4800000, guid: b7bfac7506cb79148969e43a898394c9, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap:
-    RenderType: Opaque
+  m_DoubleSidedGI: 1
+  m_CustomRenderQueue: 2050
+  stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
@@ -80,6 +79,10 @@ Material:
     m_Ints: []
     m_Floats:
     - _AlphaClip: 0
+    - _AlphaCutoff: 0.5
+    - _Amplitude: 1
+    - _BendAmount: 0.007
+    - _BendStrengh: 7.23
     - _Blend: 0
     - _BumpScale: 1
     - _ClearCoatMask: 0
@@ -90,26 +93,44 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EnvironmentReflections: 1
+    - _Float3: 15.67
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _HardLimit: 0
+    - _Mask: 48.52
     - _Metallic: 0
+    - _NoiseScale: 0.1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _QueueOffset: 0
+    - _QueueControl: 0
+    - _QueueOffset: 50
     - _ReceiveShadows: 1
+    - _SinAmplitude: 1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Surface: 0
+    - _TimeSpeed: 0.5
+    - _WindDensity: 0.3
+    - _WindStrenght: 1.19
+    - _Winddirtection: -1.36
     - _WorkflowMode: 1
+    - _WorldFrequencie: 0.166
     - _ZWrite: 1
+    - _sinamplitude: 1
+    - _timespeed: 1
     m_Colors:
+    - _BambooColor: {r: 0.24838397, g: 0.6603774, b: 0.15886426, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Direction: {r: 0.11, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _Vector0: {r: 1.62, g: 0, b: 0, a: 0}
+    - _WindDIrection_Sway: {r: 0.17, g: 0, b: 0, a: 0}
+    - _WindMovement: {r: 2.08, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &7894369584600768282
 MonoBehaviour:

@@ -6,11 +6,10 @@ Shader "Sha_Wind"
 	{
 		[HideInInspector] _AlphaCutoff("Alpha Cutoff ", Range(0, 1)) = 0.5
 		[HideInInspector] _EmissionColor("Emission Color", Color) = (1,1,1,1)
-		[ASEBegin]_Mask("Mask", Range( 0 , 20)) = 2.142865
-		[Toggle(_HARDLIMIT_ON)] _HardLimit("HardLimit", Float) = 0
-		_WorldFrequencie("WorldFrequencie", Range( 0 , 1)) = 0.06
-		_BendAmount("BendAmount", Range( 0 , 1)) = 0.01
-		[ASEEnd]_Winddirtection("Wind dirtection", Float) = 0
+		[ASEBegin]_WindStrenght("WindStrenght", Float) = 0.2
+		_WindMovement("WindMovement", Vector) = (0.5,0,0,0)
+		_WindDensity("WindDensity", Float) = 1
+		[ASEEnd]_BambooColor("BambooColor", Color) = (0.248384,0.6603774,0.1588643,0)
 
 
 		//_TransmissionShadow( "Transmission Shadow", Range( 0, 1 ) ) = 0.5
@@ -47,7 +46,7 @@ Shader "Sha_Wind"
 
 		Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" }
 
-		Cull Back
+		Cull Off
 		ZWrite On
 		ZTest LEqual
 		Offset 0 , 0
@@ -234,11 +233,7 @@ Shader "Sha_Wind"
 				#define ENABLE_TERRAIN_PERPIXEL_NORMAL
 			#endif
 
-			#define ASE_NEEDS_VERT_POSITION
-			#define ASE_NEEDS_FRAG_WORLD_POSITION
-			#define ASE_NEEDS_FRAG_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
@@ -269,17 +264,16 @@ Shader "Sha_Wind"
 				#if defined(DYNAMICLIGHTMAP_ON)
 					float2 dynamicLightmapUV : TEXCOORD7;
 				#endif
-				float4 ase_texcoord8 : TEXCOORD8;
-				float4 ase_texcoord9 : TEXCOORD9;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -321,23 +315,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -349,25 +344,15 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
-				o.ase_texcoord8 = v.vertex;
-				o.ase_texcoord9.xy = v.texcoord.xy;
-				
-				//setting value to unused interpolator channels and avoid initialization warnings
-				o.ase_texcoord9.zw = 0;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					float3 defaultVertexValue = v.vertex.xyz;
@@ -375,7 +360,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -576,22 +561,9 @@ Shader "Sha_Wind"
 
 				WorldViewDirection = SafeNormalize( WorldViewDirection );
 
-				float3 temp_output_54_0 = ( ( IN.ase_texcoord8.xyz * cos( ( ( ( WorldPosition.x + WorldPosition.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = IN.ase_texcoord9.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
 				
 
-				float3 BaseColor = temp_output_41_0;
+				float3 BaseColor = _BambooColor.rgb;
 				float3 Normal = float3(0, 0, 1);
 				float3 Emission = 0;
 				float3 Specular = 0.5;
@@ -831,15 +803,13 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -858,10 +828,10 @@ Shader "Sha_Wind"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -903,23 +873,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -934,19 +905,14 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO( o );
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
@@ -955,7 +921,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
 				#else
@@ -1003,8 +969,7 @@ Shader "Sha_Wind"
 			{
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -1021,7 +986,7 @@ Shader "Sha_Wind"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -1060,7 +1025,7 @@ Shader "Sha_Wind"
 				VertexInput o = (VertexInput) 0;
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -1172,15 +1137,13 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -1199,10 +1162,10 @@ Shader "Sha_Wind"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -1244,23 +1207,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -1272,19 +1236,14 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
@@ -1293,7 +1252,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -1326,8 +1285,7 @@ Shader "Sha_Wind"
 			{
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -1344,7 +1302,7 @@ Shader "Sha_Wind"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -1383,7 +1341,7 @@ Shader "Sha_Wind"
 				VertexInput o = (VertexInput) 0;
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -1489,11 +1447,7 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#define ASE_NEEDS_FRAG_WORLD_POSITION
-			#define ASE_NEEDS_FRAG_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
@@ -1519,17 +1473,16 @@ Shader "Sha_Wind"
 					float4 VizUV : TEXCOORD2;
 					float4 LightCoord : TEXCOORD3;
 				#endif
-				float4 ase_texcoord4 : TEXCOORD4;
-				float4 ase_texcoord5 : TEXCOORD5;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -1571,23 +1524,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -1599,25 +1553,15 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.texcoord0.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
-				o.ase_texcoord4 = v.vertex;
-				o.ase_texcoord5.xy = v.texcoord0.xy;
-				
-				//setting value to unused interpolator channels and avoid initialization warnings
-				o.ase_texcoord5.zw = 0;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					float3 defaultVertexValue = v.vertex.xyz;
@@ -1625,7 +1569,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -1768,22 +1712,9 @@ Shader "Sha_Wind"
 					#endif
 				#endif
 
-				float3 temp_output_54_0 = ( ( IN.ase_texcoord4.xyz * cos( ( ( ( WorldPosition.x + WorldPosition.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = IN.ase_texcoord5.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
 				
 
-				float3 BaseColor = temp_output_41_0;
+				float3 BaseColor = _BambooColor.rgb;
 				float3 Emission = 0;
 				float Alpha = 1;
 				float AlphaClipThreshold = 0.5;
@@ -1840,17 +1771,13 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#define ASE_NEEDS_FRAG_WORLD_POSITION
-			#define ASE_NEEDS_FRAG_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -1863,17 +1790,16 @@ Shader "Sha_Wind"
 				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR) && defined(ASE_NEEDS_FRAG_SHADOWCOORDS)
 					float4 shadowCoord : TEXCOORD1;
 				#endif
-				float4 ase_texcoord2 : TEXCOORD2;
-				float4 ase_texcoord3 : TEXCOORD3;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -1915,23 +1841,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -1943,25 +1870,15 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO( o );
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
-				o.ase_texcoord2 = v.vertex;
-				o.ase_texcoord3.xy = v.ase_texcoord.xy;
-				
-				//setting value to unused interpolator channels and avoid initialization warnings
-				o.ase_texcoord3.zw = 0;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					float3 defaultVertexValue = v.vertex.xyz;
@@ -1969,7 +1886,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -2003,8 +1920,7 @@ Shader "Sha_Wind"
 			{
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -2021,7 +1937,7 @@ Shader "Sha_Wind"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -2060,7 +1976,7 @@ Shader "Sha_Wind"
 				VertexInput o = (VertexInput) 0;
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -2097,22 +2013,9 @@ Shader "Sha_Wind"
 					#endif
 				#endif
 
-				float3 temp_output_54_0 = ( ( IN.ase_texcoord2.xyz * cos( ( ( ( WorldPosition.x + WorldPosition.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = IN.ase_texcoord3.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
 				
 
-				float3 BaseColor = temp_output_41_0;
+				float3 BaseColor = _BambooColor.rgb;
 				float Alpha = 1;
 				float AlphaClipThreshold = 0.5;
 
@@ -2162,16 +2065,14 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
 				float4 ase_tangent : TANGENT;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -2192,10 +2093,10 @@ Shader "Sha_Wind"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -2237,23 +2138,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -2265,19 +2167,14 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					float3 defaultVertexValue = v.vertex.xyz;
@@ -2285,7 +2182,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -2324,8 +2221,7 @@ Shader "Sha_Wind"
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
 				float4 ase_tangent : TANGENT;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -2343,7 +2239,7 @@ Shader "Sha_Wind"
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
 				o.ase_tangent = v.ase_tangent;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -2383,7 +2279,7 @@ Shader "Sha_Wind"
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
 				o.ase_tangent = patch[0].ase_tangent * bary.x + patch[1].ase_tangent * bary.y + patch[2].ase_tangent * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -2541,11 +2437,7 @@ Shader "Sha_Wind"
 				#define ENABLE_TERRAIN_PERPIXEL_NORMAL
 			#endif
 
-			#define ASE_NEEDS_VERT_POSITION
-			#define ASE_NEEDS_FRAG_WORLD_POSITION
-			#define ASE_NEEDS_FRAG_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
@@ -2576,17 +2468,16 @@ Shader "Sha_Wind"
 				#if defined(DYNAMICLIGHTMAP_ON)
 				float2 dynamicLightmapUV : TEXCOORD7;
 				#endif
-				float4 ase_texcoord8 : TEXCOORD8;
-				float4 ase_texcoord9 : TEXCOORD9;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 				UNITY_VERTEX_OUTPUT_STEREO
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -2625,23 +2516,24 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 			//#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/PBRGBufferPass.hlsl"
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -2653,32 +2545,22 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
-				o.ase_texcoord8 = v.vertex;
-				o.ase_texcoord9.xy = v.texcoord.xy;
-				
-				//setting value to unused interpolator channels and avoid initialization warnings
-				o.ase_texcoord9.zw = 0;
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					float3 defaultVertexValue = v.vertex.xyz;
 				#else
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -2876,22 +2758,9 @@ Shader "Sha_Wind"
 
 				WorldViewDirection = SafeNormalize( WorldViewDirection );
 
-				float3 temp_output_54_0 = ( ( IN.ase_texcoord8.xyz * cos( ( ( ( WorldPosition.x + WorldPosition.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = IN.ase_texcoord9.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
 				
 
-				float3 BaseColor = temp_output_41_0;
+				float3 BaseColor = _BambooColor.rgb;
 				float3 Normal = float3(0, 0, 1);
 				float3 Emission = 0;
 				float3 Specular = 0.5;
@@ -3036,15 +2905,13 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -3057,10 +2924,10 @@ Shader "Sha_Wind"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -3102,23 +2969,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -3138,19 +3006,14 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
@@ -3159,7 +3022,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -3181,8 +3044,7 @@ Shader "Sha_Wind"
 			{
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -3199,7 +3061,7 @@ Shader "Sha_Wind"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -3238,7 +3100,7 @@ Shader "Sha_Wind"
 				VertexInput o = (VertexInput) 0;
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -3320,15 +3182,13 @@ Shader "Sha_Wind"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/ShaderGraphFunctions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
 
-			#define ASE_NEEDS_VERT_POSITION
-			#pragma shader_feature_local _HARDLIMIT_ON
-
+			
 
 			struct VertexInput
 			{
 				float4 vertex : POSITION;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -3341,10 +3201,10 @@ Shader "Sha_Wind"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-			float _Winddirtection;
-			float _WorldFrequencie;
-			float _BendAmount;
-			float _Mask;
+			float4 _BambooColor;
+			float2 _WindMovement;
+			float _WindDensity;
+			float _WindStrenght;
 			#ifdef ASE_TRANSMISSION
 				float _TransmissionShadow;
 			#endif
@@ -3386,23 +3246,24 @@ Shader "Sha_Wind"
 			//#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/VisualEffectVertex.hlsl"
 			//#endif
 
-			float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
+			//https://www.shadertoy.com/view/XdXGW8
+			float2 GradientNoiseDir( float2 x )
 			{
-				original -= center;
-				float C = cos( angle );
-				float S = sin( angle );
-				float t = 1 - C;
-				float m00 = t * u.x * u.x + C;
-				float m01 = t * u.x * u.y - S * u.z;
-				float m02 = t * u.x * u.z + S * u.y;
-				float m10 = t * u.x * u.y + S * u.z;
-				float m11 = t * u.y * u.y + C;
-				float m12 = t * u.y * u.z - S * u.x;
-				float m20 = t * u.x * u.z - S * u.y;
-				float m21 = t * u.y * u.z + S * u.x;
-				float m22 = t * u.z * u.z + C;
-				float3x3 finalMatrix = float3x3( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-				return mul( finalMatrix, original ) + center;
+				const float2 k = float2( 0.3183099, 0.3678794 );
+				x = x * k + k.yx;
+				return -1.0 + 2.0 * frac( 16.0 * k * frac( x.x * x.y * ( x.x + x.y ) ) );
+			}
+			
+			float GradientNoise( float2 UV, float Scale )
+			{
+				float2 p = UV * Scale;
+				float2 i = floor( p );
+				float2 f = frac( p );
+				float2 u = f * f * ( 3.0 - 2.0 * f );
+				return lerp( lerp( dot( GradientNoiseDir( i + float2( 0.0, 0.0 ) ), f - float2( 0.0, 0.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 0.0 ) ), f - float2( 1.0, 0.0 ) ), u.x ),
+						lerp( dot( GradientNoiseDir( i + float2( 0.0, 1.0 ) ), f - float2( 0.0, 1.0 ) ),
+						dot( GradientNoiseDir( i + float2( 1.0, 1.0 ) ), f - float2( 1.0, 1.0 ) ), u.x ), u.y );
 			}
 			
 
@@ -3422,19 +3283,14 @@ Shader "Sha_Wind"
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
 				float3 ase_worldPos = TransformObjectToWorld( (v.vertex).xyz );
-				float3 temp_output_54_0 = ( ( v.vertex.xyz * cos( ( ( ( ase_worldPos.x + ase_worldPos.z ) * _WorldFrequencie ) + ( _TimeParameters.x ) ) ) ) * _BendAmount );
-				float3 appendResult56 = (float3(temp_output_54_0.x , 0.0 , temp_output_54_0.x));
-				float3 break59 = mul( float4( appendResult56 , 0.0 ), GetObjectToWorldMatrix() ).xyz;
-				float4 appendResult60 = (float4(break59.x , 0 , break59.z , 0.0));
-				float3 rotatedValue62 = RotateAroundAxis( float3( 0,0,0 ), appendResult60.xyz, float3( 0,0,0 ), _Winddirtection );
-				float2 texCoord11 = v.ase_texcoord.xy * float2( 1,1 ) + float2( 0,0 );
-				float temp_output_14_0 = pow( texCoord11.y , _Mask );
-				#ifdef _HARDLIMIT_ON
-				float staticSwitch22 = step( temp_output_14_0 , 0.5 );
-				#else
-				float staticSwitch22 = temp_output_14_0;
-				#endif
-				float3 temp_output_41_0 = ( rotatedValue62 * staticSwitch22 );
+				float gradientNoise108 = GradientNoise((ase_worldPos*1.0 + float3( ( _TimeParameters.x * _WindMovement ) ,  0.0 )).xy,_WindDensity);
+				gradientNoise108 = gradientNoise108*0.5 + 0.5;
+				float3 break115 = ase_worldPos;
+				float4 appendResult117 = (float4(( ( ( gradientNoise108 - 0.5 ) * _WindStrenght ) + break115.x ) , break115.y , break115.z , 1.0));
+				float3 ase_worldViewDir = ( _WorldSpaceCameraPos.xyz - ase_worldPos );
+				ase_worldViewDir = SafeNormalize( ase_worldViewDir );
+				float4 temp_output_119_0 = ( appendResult117 - float4( ase_worldViewDir , 0.0 ) );
+				float4 transform120 = mul(GetWorldToObjectMatrix(),temp_output_119_0);
 				
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
@@ -3443,7 +3299,7 @@ Shader "Sha_Wind"
 					float3 defaultVertexValue = float3(0, 0, 0);
 				#endif
 
-				float3 vertexValue = temp_output_41_0;
+				float3 vertexValue = transform120.xyz;
 
 				#ifdef ASE_ABSOLUTE_VERTEX_POS
 					v.vertex.xyz = vertexValue;
@@ -3464,8 +3320,7 @@ Shader "Sha_Wind"
 			{
 				float4 vertex : INTERNALTESSPOS;
 				float3 ase_normal : NORMAL;
-				float4 ase_texcoord : TEXCOORD0;
-
+				
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
@@ -3482,7 +3337,7 @@ Shader "Sha_Wind"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				o.vertex = v.vertex;
 				o.ase_normal = v.ase_normal;
-				o.ase_texcoord = v.ase_texcoord;
+				
 				return o;
 			}
 
@@ -3521,7 +3376,7 @@ Shader "Sha_Wind"
 				VertexInput o = (VertexInput) 0;
 				o.vertex = patch[0].vertex * bary.x + patch[1].vertex * bary.y + patch[2].vertex * bary.z;
 				o.ase_normal = patch[0].ase_normal * bary.x + patch[1].ase_normal * bary.y + patch[2].ase_normal * bary.z;
-				o.ase_texcoord = patch[0].ase_texcoord * bary.x + patch[1].ase_texcoord * bary.y + patch[2].ase_texcoord * bary.z;
+				
 				#if defined(ASE_PHONG_TESSELLATION)
 				float3 pp[3];
 				for (int i = 0; i < 3; ++i)
@@ -3579,70 +3434,61 @@ Shader "Sha_Wind"
 }
 /*ASEBEGIN
 Version=19103
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;41;65.48962,-121.5077;Inherit;False;2;2;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;3;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=ShadowCaster;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;4;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;False;False;True;1;LightMode=DepthOnly;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;5;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Meta;0;4;Meta;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Meta;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;6;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Universal2D;0;5;Universal2D;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=Universal2D;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;7;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthNormals;0;6;DepthNormals;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;0;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=DepthNormals;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;8;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;GBuffer;0;7;GBuffer;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=UniversalGBuffer;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;9;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;SceneSelectionPass;0;8;SceneSelectionPass;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=SceneSelectionPass;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;10;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ScenePickingPass;0;9;ScenePickingPass;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Picking;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;2;511,-50;Float;False;True;-1;2;UnityEditor.ShaderGraphLitGUI;0;12;Sha_Wind;94348b07e5e8bab40bd6c8a1e3df54cd;True;Forward;0;1;Forward;19;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=UniversalForward;False;False;0;;0;0;Standard;41;Workflow;1;0;Surface;0;0;  Refraction Model;0;0;  Blend;0;0;Two Sided;1;0;Fragment Normal Space,InvertActionOnDeselection;0;0;Forward Only;0;0;Transmission;0;0;  Transmission Shadow;0.5,False,;0;Translucency;0;0;  Translucency Strength;1,False,;0;  Normal Distortion;0.5,False,;0;  Scattering;2,False,;0;  Direct;0.9,False,;0;  Ambient;0.1,False,;0;  Shadow;0.5,False,;0;Cast Shadows;1;0;  Use Shadow Threshold;0;0;Receive Shadows;1;0;GPU Instancing;1;0;LOD CrossFade;1;0;Built-in Fog;1;0;_FinalColorxAlpha;0;0;Meta Pass;1;0;Override Baked GI;0;0;Extra Pre Pass;0;0;DOTS Instancing;0;0;Tessellation;0;0;  Phong;0;0;  Strength;0.5,False,;0;  Type;0;0;  Tess;16,False,;0;  Min;10,False,;0;  Max;25,False,;0;  Edge Length;16,False,;0;  Max Displacement;25,False,;0;Write Depth;0;0;  Early Z;0;0;Vertex Position,InvertActionOnDeselection;1;0;Debug Display;0;0;Clear Coat;0;0;0;10;False;True;True;True;True;True;True;True;True;True;False;;False;0
-Node;AmplifyShaderEditor.WorldPosInputsNode;45;-3259.039,32.46033;Inherit;False;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
-Node;AmplifyShaderEditor.SimpleAddOpNode;46;-2954.596,59.41624;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;47;-2787.073,111.6404;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;48;-3156.073,261.6404;Inherit;False;Property;_WorldFrequencie;WorldFrequencie;2;0;Create;True;0;0;0;False;0;False;0.06;0;0;1;0;1;FLOAT;0
-Node;AmplifyShaderEditor.TimeNode;50;-2904.073,415.6404;Inherit;False;0;5;FLOAT4;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.SimpleAddOpNode;49;-2572.073,327.6404;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.CosOpNode;51;-2409.073,484.6404;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.PosVertexDataNode;52;-2371.073,153.6404;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;53;-2172.073,404.6404;Inherit;False;2;2;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;54;-1946.073,367.6404;Inherit;False;2;2;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.RangedFloatNode;55;-2362.073,572.6404;Inherit;False;Property;_BendAmount;BendAmount;3;0;Create;True;0;0;0;False;0;False;0.01;0;0;1;0;1;FLOAT;0
-Node;AmplifyShaderEditor.DynamicAppendNode;56;-1727.073,324.6404;Inherit;False;FLOAT3;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.ObjectToWorldMatrixNode;58;-1827.073,623.6404;Inherit;False;0;1;FLOAT4x4;0
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;57;-1551.073,366.6404;Inherit;False;2;2;0;FLOAT3;0,0,0;False;1;FLOAT4x4;0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;1;-130.7771,1242.947;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ExtraPrePass;0;0;ExtraPrePass;5;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;0;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;0;False;False;0;;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.PowerNode;14;-844.277,1191.947;Inherit;True;False;2;0;FLOAT;0;False;1;FLOAT;1;False;1;FLOAT;0
-Node;AmplifyShaderEditor.TextureCoordinatesNode;11;-1105.277,1113.947;Inherit;True;0;-1;2;3;2;SAMPLER2D;;False;0;FLOAT2;1,1;False;1;FLOAT2;0,0;False;5;FLOAT2;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.StaticSwitch;22;-324.2771,1186.947;Inherit;True;Property;_HardLimit;HardLimit;1;0;Create;True;0;0;0;False;0;False;0;0;0;True;;Toggle;2;Key0;Key1;Create;True;True;All;9;1;FLOAT;0;False;0;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT;0;False;7;FLOAT;0;False;8;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.StepOpNode;21;-574.277,1322.947;Inherit;True;2;0;FLOAT;0;False;1;FLOAT;0.5;False;1;FLOAT;0
-Node;AmplifyShaderEditor.RangedFloatNode;15;-1136.277,1393.947;Inherit;False;Property;_Mask;Mask;0;0;Create;True;0;0;0;False;0;False;2.142865;0;0;20;0;1;FLOAT;0
-Node;AmplifyShaderEditor.BreakToComponentsNode;59;-1369.828,370.7376;Inherit;True;FLOAT3;1;0;FLOAT3;0,0,0;False;16;FLOAT;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT;5;FLOAT;6;FLOAT;7;FLOAT;8;FLOAT;9;FLOAT;10;FLOAT;11;FLOAT;12;FLOAT;13;FLOAT;14;FLOAT;15
-Node;AmplifyShaderEditor.DynamicAppendNode;60;-842.4861,378.8104;Inherit;False;FLOAT4;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;0;False;1;FLOAT4;0
-Node;AmplifyShaderEditor.Vector4Node;61;-1139.486,232.8104;Inherit;False;Constant;_Vector1;Vector 1;8;0;Create;True;0;0;0;False;0;False;0,0,0,0;0,0,0,0;0;5;FLOAT4;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.RotateAboutAxisNode;62;-624.4861,550.8104;Inherit;False;False;4;0;FLOAT3;0,0,0;False;1;FLOAT;0;False;2;FLOAT3;0,0,0;False;3;FLOAT3;0,0,0;False;1;FLOAT3;0
-Node;AmplifyShaderEditor.RangedFloatNode;63;-842.4861,646.8104;Inherit;False;Property;_Winddirtection;Wind dirtection;4;0;Create;True;0;0;0;False;0;False;0;0;0;0;0;1;FLOAT;0
-WireConnection;41;0;62;0
-WireConnection;41;1;22;0
-WireConnection;2;0;41;0
-WireConnection;2;8;41;0
-WireConnection;46;0;45;1
-WireConnection;46;1;45;3
-WireConnection;47;0;46;0
-WireConnection;47;1;48;0
-WireConnection;49;0;47;0
-WireConnection;49;1;50;2
-WireConnection;51;0;49;0
-WireConnection;53;0;52;0
-WireConnection;53;1;51;0
-WireConnection;54;0;53;0
-WireConnection;54;1;55;0
-WireConnection;56;0;54;0
-WireConnection;56;2;54;0
-WireConnection;57;0;56;0
-WireConnection;57;1;58;0
-WireConnection;14;0;11;2
-WireConnection;14;1;15;0
-WireConnection;22;1;14;0
-WireConnection;22;0;21;0
-WireConnection;21;0;14;0
-WireConnection;59;0;57;0
-WireConnection;60;0;59;0
-WireConnection;60;1;61;2
-WireConnection;60;2;59;2
-WireConnection;62;1;63;0
-WireConnection;62;3;60;0
+Node;AmplifyShaderEditor.RangedFloatNode;112;3312.546,470.0097;Inherit;False;Property;_WindStrenght;WindStrenght;0;0;Create;True;0;0;0;False;0;False;0.2;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.SimpleAddOpNode;113;3995.546,538.0096;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.BreakToComponentsNode;115;3822.546,786.0096;Inherit;False;FLOAT3;1;0;FLOAT3;0,0,0;False;16;FLOAT;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4;FLOAT;5;FLOAT;6;FLOAT;7;FLOAT;8;FLOAT;9;FLOAT;10;FLOAT;11;FLOAT;12;FLOAT;13;FLOAT;14;FLOAT;15
+Node;AmplifyShaderEditor.NoiseGeneratorNode;108;3155.798,142.1218;Inherit;True;Gradient;True;False;2;0;FLOAT2;0,0;False;1;FLOAT;1;False;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;121;2895.001,353.9926;Inherit;False;Property;_WindDensity;WindDensity;2;0;Create;True;0;0;0;False;0;False;1;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.SimpleSubtractOpNode;110;3409.546,166.0097;Inherit;True;2;0;FLOAT;0;False;1;FLOAT;0.5;False;1;FLOAT;0
+Node;AmplifyShaderEditor.SimpleSubtractOpNode;119;4548.46,978.8719;Inherit;False;2;0;FLOAT4;0,0,0,0;False;1;FLOAT3;0,0,0;False;1;FLOAT4;0
+Node;AmplifyShaderEditor.ColorNode;124;4971.623,735.8335;Inherit;False;Property;_BambooColor;BambooColor;3;0;Create;True;0;0;0;False;0;False;0.248384,0.6603774,0.1588643,0;0,0,0,0;True;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;136;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ExtraPrePass;0;0;ExtraPrePass;5;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;0;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;0;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;138;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=ShadowCaster;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;139;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;False;False;True;False;False;False;False;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;False;False;True;1;LightMode=DepthOnly;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;140;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Meta;0;4;Meta;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Meta;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;141;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Universal2D;0;5;Universal2D;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=Universal2D;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;142;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthNormals;0;6;DepthNormals;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;0;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;False;;True;3;False;;False;True;1;LightMode=DepthNormals;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;143;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;GBuffer;0;7;GBuffer;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=UniversalGBuffer;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;144;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;SceneSelectionPass;0;8;SceneSelectionPass;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=SceneSelectionPass;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;145;5189.067,887.5443;Float;False;False;-1;2;UnityEditor.ShaderGraphLitGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ScenePickingPass;0;9;ScenePickingPass;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;0;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Picking;False;False;0;;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.SimpleTimeNode;104;2059.798,342.1218;Inherit;False;1;0;FLOAT;1;False;1;FLOAT;0
+Node;AmplifyShaderEditor.Vector2Node;107;2090.798,482.1218;Inherit;False;Property;_WindMovement;WindMovement;1;0;Create;True;0;0;0;False;0;False;0.5,0;0,0;0;3;FLOAT2;0;FLOAT;1;FLOAT;2
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;105;2294.798,380.1218;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT2;0,0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.WorldPosInputsNode;103;2287.798,-37.87823;Inherit;False;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
+Node;AmplifyShaderEditor.ScaleAndOffsetNode;102;2628.095,133.2561;Inherit;False;3;0;FLOAT3;0,0,0;False;1;FLOAT;1;False;2;FLOAT3;0,0,0;False;1;FLOAT3;0
+Node;AmplifyShaderEditor.ViewDirInputsCoordNode;148;4276.677,1170.259;Inherit;False;World;True;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
+Node;AmplifyShaderEditor.WorldPosInputsNode;114;3552.546,719.0096;Inherit;False;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;111;3685.197,353.6347;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.DynamicAppendNode;117;4271.546,789.0096;Inherit;True;FLOAT4;4;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0;False;3;FLOAT;1;False;1;FLOAT4;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;137;5435.067,863.5443;Float;False;True;-1;2;UnityEditor.ShaderGraphLitGUI;0;12;Sha_Wind;94348b07e5e8bab40bd6c8a1e3df54cd;True;Forward;0;1;Forward;19;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;;False;True;2;False;;False;False;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;3;True;12;all;0;False;True;1;1;False;;0;False;;1;1;False;;0;False;;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;;False;False;False;False;False;False;False;True;False;0;False;;255;False;;255;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;0;False;;False;True;1;False;;True;3;False;;True;True;0;False;;0;False;;True;1;LightMode=UniversalForward;False;False;0;;0;0;Standard;41;Workflow;1;0;Surface;0;0;  Refraction Model;0;0;  Blend;0;0;Two Sided;0;638091288891254719;Fragment Normal Space,InvertActionOnDeselection;0;0;Forward Only;0;0;Transmission;0;0;  Transmission Shadow;0.5,False,;0;Translucency;0;0;  Translucency Strength;1,False,;0;  Normal Distortion;0.5,False,;0;  Scattering;2,False,;0;  Direct;0.9,False,;0;  Ambient;0.1,False,;0;  Shadow;0.5,False,;0;Cast Shadows;1;0;  Use Shadow Threshold;0;0;Receive Shadows;1;0;GPU Instancing;1;0;LOD CrossFade;1;0;Built-in Fog;1;0;_FinalColorxAlpha;0;0;Meta Pass;1;0;Override Baked GI;0;0;Extra Pre Pass;0;0;DOTS Instancing;0;0;Tessellation;0;0;  Phong;0;0;  Strength;0.5,False,;0;  Type;0;0;  Tess;16,False,;0;  Min;10,False,;0;  Max;25,False,;0;  Edge Length;16,False,;0;  Max Displacement;25,False,;0;Write Depth;0;638091290904942522;  Early Z;0;0;Vertex Position,InvertActionOnDeselection;1;0;Debug Display;0;0;Clear Coat;0;0;0;10;False;True;True;True;True;True;True;True;True;True;False;;False;0
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;161;4019.199,1070.6;Inherit;True;2;2;0;FLOAT;0;False;1;FLOAT;0.81;False;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;162;3813.199,1123.6;Inherit;False;Property;_Mask;Mask;4;0;Create;True;0;0;0;False;0;False;0.66;0;0;0;0;1;FLOAT;0
+Node;AmplifyShaderEditor.PosVertexDataNode;163;3683.199,962.6003;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.WorldToObjectTransfNode;120;4892.546,1013.01;Inherit;True;1;0;FLOAT4;0,0,0,1;False;5;FLOAT4;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;164;4676.199,804.6003;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT4;0,0,0,0;False;1;FLOAT4;0
+WireConnection;113;0;111;0
+WireConnection;113;1;115;0
+WireConnection;115;0;114;0
+WireConnection;108;0;102;0
+WireConnection;108;1;121;0
+WireConnection;110;0;108;0
+WireConnection;119;0;117;0
+WireConnection;119;1;148;0
+WireConnection;105;0;104;0
+WireConnection;105;1;107;0
+WireConnection;102;0;103;0
+WireConnection;102;2;105;0
+WireConnection;111;0;110;0
+WireConnection;111;1;112;0
+WireConnection;117;0;113;0
+WireConnection;117;1;115;1
+WireConnection;117;2;115;2
+WireConnection;137;0;124;0
+WireConnection;137;8;120;0
+WireConnection;161;0;163;2
+WireConnection;161;1;162;0
+WireConnection;120;0;119;0
+WireConnection;164;0;161;0
+WireConnection;164;1;119;0
 ASEEND*/
-//CHKSM=DD2E4A92AB41A616A4CB668F1008BFEEE38C6D95
+//CHKSM=567C804D0EA846E5915032936133AA3ACF9A693C
