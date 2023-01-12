@@ -96,4 +96,6 @@ public class GameManager : MonoBehaviour
         JarBDD.Clear();
 
     }
+    
+
 }

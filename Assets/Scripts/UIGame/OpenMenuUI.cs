@@ -6,6 +6,11 @@ using UnityEngine.UI;
 
 public class OpenMenuUI : MonoBehaviour
 {
+    public static OpenMenuUI Instance;
+    private void Awake()
+    {
+        Instance = this; 
+    }
     public bool IsMenuOpen;
     public GameObject Menu;
 
