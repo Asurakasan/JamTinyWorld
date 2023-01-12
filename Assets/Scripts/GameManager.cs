@@ -32,13 +32,6 @@ public class GameManager : MonoBehaviour
         mouseScreenPos.z = Camera.main.WorldToScreenPoint(transform.position).z;
         if (Input.GetKeyDown(KeyCode.Delete))
             Destroy(currentObject.gameObject, 2);
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GameObject go = Instantiate(prefab, new Vector3(2, 10, 2), Quaternion.identity, parentGO);
-            go.GetComponent<DragDrop>().nom = BDD[UnityEngine.Random.Range(0, BDD.Count)];
-            go.GetComponent<DragDrop>().type = (Type)UnityEngine.Random.Range(0, System.Enum.GetValues(typeof(Type)).Length);
-
-        }
 
         if (lastObject != null)
         {
@@ -64,7 +57,8 @@ public class GameManager : MonoBehaviour
     }
     public void SwitchObject(DragDrop dragDrop)
     {
-        lastObject = currentObject;
+        if(currentObject != null)
+            lastObject = currentObject;
         currentObject = dragDrop;
         if (lastObject != null)
         {
