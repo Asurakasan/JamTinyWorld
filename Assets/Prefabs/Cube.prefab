@@ -110,7 +110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367e93ef57e61ad4599b65b8cbadf13b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nom: 
+  nom: Bamboo
   type: 0
   layerMask:
     serializedVersion: 2

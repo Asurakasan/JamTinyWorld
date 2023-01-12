@@ -6,6 +6,11 @@ using UnityEngine.UI;
 
 public class OpenMenuUI : MonoBehaviour
 {
+    public static OpenMenuUI Instance;
+    private void Awake()
+    {
+        Instance = this; 
+    }
     public bool IsMenuOpen;
     public GameObject Menu;
 
@@ -14,12 +19,12 @@ public class OpenMenuUI : MonoBehaviour
         if (IsMenuOpen)
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveX(-70, 1).OnComplete(CloseMenu);
+            Menu.transform.DOLocalMoveX(-666, 1).OnComplete(CloseMenu);
         }
         else
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveX(0, 1).OnComplete(OpenMenu);
+            Menu.transform.DOLocalMoveX(0, 1).OnComplete(OpenMenu);
         }
     }
     public void OnClickOpenMenuToRight()
@@ -27,12 +32,12 @@ public class OpenMenuUI : MonoBehaviour
         if (IsMenuOpen)
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveX(45, 1).OnComplete(CloseMenu);
+            Menu.transform.DOLocalMoveX(450, 1).OnComplete(CloseMenu);
         }
         else
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveX(0, 1).OnComplete(OpenMenu);
+            Menu.transform.DOLocalMoveX(0, 1).OnComplete(OpenMenu);
         }
     }
     public void OnClickOpenMenuToDown()
@@ -40,12 +45,12 @@ public class OpenMenuUI : MonoBehaviour
         if (IsMenuOpen)
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveY(-45, 1).OnComplete(CloseMenu);
+            Menu.transform.DOLocalMoveY(-450, 1).OnComplete(CloseMenu);
         }
         else
         {
             Menu.transform.DOComplete();
-            Menu.transform.DOMoveY(0, 1).OnComplete(OpenMenu);
+            Menu.transform.DOLocalMoveY(0, 1).OnComplete(OpenMenu);
         }
     }
     void CloseMenu()

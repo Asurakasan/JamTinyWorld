@@ -10,15 +10,20 @@ public class ShopMenuUI : MonoBehaviour
     bool IsLock = true;
     public Image ImageLock;
     public TextMeshProUGUI TextCost;
-    public int Cost;
+    //public int Cost;
+    public int LevelToUnlock;
 
     void Start()
     {
-        TextCost.text = "" + Cost;
+        //TextCost.text = "" + Cost;
     }
 
     void Update()
     {
+        if (MainGame.Instance.IntCurrentAnimal >= LevelToUnlock-1)
+            IsLock = false;
+
+
         if (!IsLock)
             ImageLock.enabled = false;
         else
