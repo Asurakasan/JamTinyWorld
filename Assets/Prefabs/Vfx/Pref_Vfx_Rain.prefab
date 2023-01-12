@@ -4821,6 +4821,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2508420892759071230}
     m_Modifications:
+    - target: {fileID: 905326644755359454, guid: 2a0fa17b9b0f02c4ba6636e0a4ad4d49, type: 3}
+      propertyPath: CollisionModule.m_Dampen.scalar
+      value: 0.48
+      objectReference: {fileID: 0}
+    - target: {fileID: 905326644755359454, guid: 2a0fa17b9b0f02c4ba6636e0a4ad4d49, type: 3}
+      propertyPath: CollisionModule.m_EnergyLossOnCollision.scalar
+      value: 0.57
+      objectReference: {fileID: 0}
     - target: {fileID: 2927996764872045071, guid: 2a0fa17b9b0f02c4ba6636e0a4ad4d49, type: 3}
       propertyPath: m_Name
       value: Pref_Vfx_Storm_Rain
