@@ -126,19 +126,18 @@ public class GameManager : MonoBehaviour
     }
     public void ClickDelete()
     {
-        Obj o = new Obj();
-        o.objets = currentObject;
-        o.nom = currentObject.nom;
-        int index = search(o);
-
-        if (index != -1)
-            JarBDD.RemoveAt(index);
-
-        Destroy(currentObject.gameObject, 0.3f);
         for (int i = 0; i < ButtonForDeco.Count; i++)
         {
             ButtonForDeco[i].SetActive(false);
         }
+        Obj o = new Obj();
+        o.objets = currentObject;
+        o.nom = currentObject.nom;
+        int index = search(o);
+        if (index != -1)
+            JarBDD.RemoveAt(index);
+        Destroy(currentObject.gameObject, 0.3f);
+        
     }
 
 }

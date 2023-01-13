@@ -1426,7 +1426,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 140916846}
   m_HandleRect: {fileID: 140916845}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -2000,7 +2000,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 02800fb9cff14da47a04572790384d8b, type: 3}
     Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
     AnimalsVisual: []
-    Description: 3
+    Description: Ils aiment vivre dans la nature.
     Tasks:
     - Name: Carotte
       Number: 1
@@ -2026,7 +2026,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: 144aa74618b85974a9a50f612c2fa8fd, type: 3}
     Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
     AnimalsVisual: []
-    Description: 4
+    Description: Ils sont gentils.
     Tasks:
     - Name: Fruits
       Number: 1
@@ -2052,7 +2052,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils vivent dans la mer.
     Tasks:
     - Name: Roches
       Number: 1
@@ -2078,7 +2078,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils aiment fouiner.
     Tasks:
     - Name: Vieux burger
       Number: 1
@@ -2099,7 +2099,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 6442834854414324749, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils vivent dans l'ombre.
     Tasks:
     - Name: Fruits
       Number: 2
@@ -2126,11 +2126,16 @@ MonoBehaviour:
       MoneyByTask: 4
       Description: Placer 8 herbes
       TaskEnded: 0
+    - Name: Temps
+      Number: 8
+      MoneyByTask: 4
+      Description: Ils aiment la nuit
+      TaskEnded: 0
   - Name: Cobra & tatou
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 6442834854414324749, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils vivent dans le desert et supporte les grande chaleur.
     Tasks:
     - Name: Cactus
       Number: 1
@@ -2161,7 +2166,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 1698718783414493528, guid: 334493f8ee4d5d84cabbb8f9048b4abd, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils aiment l'eau.
     Tasks:
     - Name: Corail
       Number: 1
