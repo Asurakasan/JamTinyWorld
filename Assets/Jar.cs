@@ -5,15 +5,6 @@ using UnityEngine;
 public class Jar : MonoBehaviour
 {
     public GameObject water;
-    // Start is called before the first frame update
-    void Start()
-    {
-        water = GetComponentInChildren<Water>().gameObject;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public List<GameObject> Heure = new List<GameObject>();
+    public List<GameObject> Meteo = new List<GameObject>();
 }

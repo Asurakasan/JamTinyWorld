@@ -62,7 +62,14 @@ public class MainGame : MonoBehaviour
 
     public void PopObject()
     {
-        GameObject go = Instantiate(CurrentAnimal.Jar, ParentJar);
+        if (CurrentAnimal != null)
+        {
+            for (var i = ParentJar.transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(ParentJar.transform.GetChild(i).gameObject);
+            }
+        }
+            GameObject go = Instantiate(CurrentAnimal.Jar, ParentJar);
 
         var pos = transform.position;
         
@@ -79,6 +86,8 @@ public class MainGame : MonoBehaviour
             CurrentAnimal.AnimalsVisual[x].transform.position = pos;
         }
         WaterOrNot(go);
+        GameManager.instance.InstantiateVFX(go);
+        GameManager.instance.InstantiateTemps(go);
     }
     public void WaterOrNot(GameObject animal)
     {
@@ -102,7 +111,6 @@ public class MainGame : MonoBehaviour
             {
                 if (GameManager.instance.JarBDD[i].nom == CurrentAnimal.Tasks[j].Name)
                     tempCount++;
-                print(tempCount);
                 if (tempCount >= CurrentAnimal.Tasks[j].Number)
                 {
                     CurrentAnimal.Tasks[j].TaskEnded = true;

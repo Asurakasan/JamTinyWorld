@@ -21,7 +21,23 @@ public class GameManager : MonoBehaviour
     public DragDrop currentObject;
     public DragDrop lastObject;
     public List<GameObject> ButtonForDeco = new List<GameObject>();
+    public List<VFXshop> VfxButton = new List<VFXshop>();
+    public List<HeureShop> ShopTemps = new List<HeureShop>();
 
+    public void InstantiateVFX(GameObject currentJar)
+    {
+        for (int i = 0; i < VfxButton.Count; i++)
+        {
+            VfxButton[i].Instantiate(currentJar);
+        }
+    }
+    public void InstantiateTemps(GameObject currentJar)
+    {
+        for (int i = 0; i < ShopTemps.Count; i++)
+        {
+            ShopTemps[i].Instantiate(currentJar);
+        }
+    }
     private void Awake()
     {
         instance = this;
