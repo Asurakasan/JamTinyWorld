@@ -2078,7 +2078,7 @@ MonoBehaviour:
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
     AnimalsVisual: []
-    Description: 5
+    Description: Ils aiment fouiner.
     Tasks:
     - Name: Vieux burger
       Number: 1
