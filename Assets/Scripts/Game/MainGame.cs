@@ -65,7 +65,7 @@ public class MainGame : MonoBehaviour
         GameObject go = Instantiate(CurrentAnimal.Jar, ParentJar);
 
         var pos = transform.position;
-
+        
         //foreach (var item in CurrentAnimal.AnimalsVisual)
         //{
         //    Instantiate(item, transform);
@@ -78,6 +78,17 @@ public class MainGame : MonoBehaviour
             pos.x += 2 * x;
             CurrentAnimal.AnimalsVisual[x].transform.position = pos;
         }
+        WaterOrNot(go);
+    }
+    public void WaterOrNot(GameObject animal)
+    {
+        if (CurrentAnimal.Water)
+        {
+            animal.GetComponent<Jar>().water.SetActive(true);
+        }
+        else if(!CurrentAnimal.Water)
+            animal.GetComponent<Jar>().water.SetActive(false);
+
     }
 
     void CountObjectBDD()
