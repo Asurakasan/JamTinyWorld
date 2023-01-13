@@ -7,11 +7,12 @@ public class ShopMenuUI : MonoBehaviour
 {
     public GameObject ObjectToDrag;
     
-    bool IsLock = true;
+    public bool IsLock = true;
     public Image ImageLock;
     public TextMeshProUGUI TextCost;
-    //public int Cost;
-    public int LevelToUnlock;
+    public GameObject buttonUi;
+    public int Cost;
+    //public int LevelToUnlock;
 
     void Start()
     {
@@ -20,13 +21,30 @@ public class ShopMenuUI : MonoBehaviour
 
     void Update()
     {
-        if (MainGame.Instance.IntCurrentAnimal >= LevelToUnlock-1)
-            IsLock = false;
+        /*if (MainGame.Instance.IntCurrentAnimal >= LevelToUnlock-1)
+            IsLock = false;*/
 
 
         if (!IsLock)
+        {
             ImageLock.enabled = false;
+            buttonUi.SetActive(false);
+        }
         else
             ImageLock.enabled = true;
+    }
+
+    public void OnClickCost()
+    {
+        if(MainGame.Instance.Money >= Cost)
+        {
+            MainGame.Instance.Money -= Cost;
+             IsLock = false;
+            buttonUi.SetActive(false);
+        }
+        else
+        {
+            //sound lock
+        }
     }
 }
