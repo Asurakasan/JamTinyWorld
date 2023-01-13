@@ -3174,61 +3174,105 @@ MonoBehaviour:
   ParentJar: {fileID: 0}
   PrefabTask: {fileID: 3077085112627090647, guid: 79913730a186b6f4196b260c86e51815, type: 3}
   Animals:
-  - Name: pierre
+  - Name: Koala
     Sprite: {fileID: 21300000, guid: f09eae8c0ea04254b90c5386a034a225, type: 3}
     Jar: {fileID: 0}
     AnimalsVisual: []
-    Description: poisson rouge de tres petite taille
+    Description: "On les trouve dans les for\xEAts temp\xE9r\xE9es, ils aiment manger
+      des bamboo."
     Tasks:
     - Name: 
       Number: 0
       MoneyByTask: 0
-      Description: 'Nouri le poisson '
+      Description: Nourir le Koala
       TaskEnded: 0
-    - Name: 
-      Number: 0
-      MoneyByTask: 0
-      Description: Mange Pierre
-      TaskEnded: 0
-    - Name: 
-      Number: 0
-      MoneyByTask: 0
-      Description: mets un arbre
-      TaskEnded: 0
-  - Name: Paul
+  - Name: Lapin
     Sprite: {fileID: 21300000, guid: f9161c6c9e06dc445ada3ee16d991f90, type: 3}
     Jar: {fileID: 0}
     AnimalsVisual: []
-    Description: dfdfqdfq
+    Description: 'Les lapins vivent dans des terriens avec leurs familles
+
+      ils
+      aiment vivre dans les plaines et mangent des legumes.'
     Tasks:
     - Name: 
       Number: 0
       MoneyByTask: 0
-      Description: gdsgdsgdg
+      Description: Donner un legume orange
       TaskEnded: 0
-  - Name: Jack
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Poser un arbre
+      TaskEnded: 0
+  - Name: Lapin et Mouton
     Sprite: {fileID: 21300000, guid: 02800fb9cff14da47a04572790384d8b, type: 3}
     Jar: {fileID: 0}
     AnimalsVisual: []
-    Description: 3
+    Description: Aime la nature
     Tasks:
     - Name: 
       Number: 0
       MoneyByTask: 0
-      Description: 
+      Description: Donner une carotte
       TaskEnded: 0
-  - Name: Jacki
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Mettre un arbre
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Mettre des plantes vegetal
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Ils aiment quand il fait beau
+      TaskEnded: 0
+  - Name: Crabe/ tortue
     Sprite: {fileID: 21300000, guid: 144aa74618b85974a9a50f612c2fa8fd, type: 3}
     Jar: {fileID: 0}
     AnimalsVisual: []
-    Description: 4
-    Tasks: []
-  - Name: Michel
+    Description: Vivent dans la mer
+    Tasks:
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Mettre des rochers
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Mettre des corails
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Ils aiment le temps humide
+      TaskEnded: 0
+  - Name: Hibou
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
     Jar: {fileID: 0}
     AnimalsVisual: []
-    Description: 5
-    Tasks: []
+    Description: Ils aiment la nuit et surveiller la foret
+    Tasks:
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Ils aiment vivre la nuit
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Mettre des arbres
+      TaskEnded: 0
+    - Name: 
+      Number: 0
+      MoneyByTask: 0
+      Description: Nourir avec des fruits
+      TaskEnded: 0
   Money: 0
   CurrentAnimal:
     Name: Poisson
@@ -5653,6 +5697,7 @@ GameObject:
   - component: {fileID: 1376819314}
   - component: {fileID: 1376819313}
   - component: {fileID: 1376819312}
+  - component: {fileID: 1376819315}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -5726,6 +5771,39 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1376819315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1376819311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
 --- !u!1001 &1382049939
 PrefabInstance:
   m_ObjectHideFlags: 0
