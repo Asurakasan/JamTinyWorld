@@ -1959,10 +1959,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b42d690ebd4ade4884d947762fda7ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ParentJar: {fileID: 0}
   PrefabTask: {fileID: 3077085112627090647, guid: 79913730a186b6f4196b260c86e51815, type: 3}
   Animals:
   - Name: Koala
     Sprite: {fileID: 21300000, guid: f09eae8c0ea04254b90c5386a034a225, type: 3}
+    Jar: {fileID: 13259234281416262, guid: 0fa3c3f221c729a49a85768e64ab5cd9, type: 3}
+    AnimalsVisual: []
     Description: "Le koala est un marsupial end\xE9mique d'Australie, connu pour
       son pelage dense et soyeux, sa grande t\xEAte ronde et ses oreilles courtes."
     Tasks:
@@ -1978,6 +1981,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Lapin
     Sprite: {fileID: 21300000, guid: f9161c6c9e06dc445ada3ee16d991f90, type: 3}
+    Jar: {fileID: 13259234281416262, guid: 0fa3c3f221c729a49a85768e64ab5cd9, type: 3}
+    AnimalsVisual: []
     Description: Le lapin est un animal domestique populaire, connu pour sa fourrure
       douce, sa queue courte et pour aimer les carottes. Il est sociable et affectueux.
     Tasks:
@@ -1993,6 +1998,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Mouton & Lapin
     Sprite: {fileID: 21300000, guid: 02800fb9cff14da47a04572790384d8b, type: 3}
+    Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
+    AnimalsVisual: []
     Description: 3
     Tasks:
     - Name: Carotte
@@ -2017,6 +2024,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: "Panda roux & rhinoc\xE9ros"
     Sprite: {fileID: 21300000, guid: 144aa74618b85974a9a50f612c2fa8fd, type: 3}
+    Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
+    AnimalsVisual: []
     Description: 4
     Tasks:
     - Name: Fruits
@@ -2041,6 +2050,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Crabe & tortue
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
+    AnimalsVisual: []
     Description: 5
     Tasks:
     - Name: Roches
@@ -2065,6 +2076,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Raton laveur
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 7883628357245307543, guid: ca01c9ef45dce214191b1fe3420cdf92, type: 3}
+    AnimalsVisual: []
     Description: 5
     Tasks:
     - Name: Vieux burger
@@ -2084,6 +2097,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Chauve-souris & hibou
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 6442834854414324749, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
+    AnimalsVisual: []
     Description: 5
     Tasks:
     - Name: Fruits
@@ -2113,6 +2128,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Cobra & tatou
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 6442834854414324749, guid: b68540961291df7418d3d6e9d32a7d1d, type: 3}
+    AnimalsVisual: []
     Description: 5
     Tasks:
     - Name: Cactus
@@ -2142,6 +2159,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Orque & homard & crocodile
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 1698718783414493528, guid: 334493f8ee4d5d84cabbb8f9048b4abd, type: 3}
+    AnimalsVisual: []
     Description: 5
     Tasks:
     - Name: Corail
@@ -2163,6 +2182,8 @@ MonoBehaviour:
   CurrentAnimal:
     Name: Poisson
     Sprite: {fileID: 0}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: un petit poisson dans l'eau
     Tasks: []
   Pause: 0
@@ -5402,6 +5423,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 844572014700621032, guid: 7ae8b26865cc00f4999a995e823a3f51, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 844572014793034125, guid: 7ae8b26865cc00f4999a995e823a3f51, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 844572014793034125, guid: 7ae8b26865cc00f4999a995e823a3f51, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 844572014793034125, guid: 7ae8b26865cc00f4999a995e823a3f51, type: 3}
+      propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 844572015234702906, guid: 7ae8b26865cc00f4999a995e823a3f51, type: 3}
