@@ -73,6 +73,7 @@ public class MainGame : MonoBehaviour
 
         var pos = transform.position;
         
+        
         //foreach (var item in CurrentAnimal.AnimalsVisual)
         //{
         //    Instantiate(item, transform);
