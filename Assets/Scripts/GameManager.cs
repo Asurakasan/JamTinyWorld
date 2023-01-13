@@ -20,35 +20,53 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public DragDrop currentObject;
     public DragDrop lastObject;
+    public List<GameObject> ButtonForDeco = new List<GameObject>();
 
     private void Awake()
     {
         instance = this;
-    }
 
+    }
+    private void Start()
+    {
+        for (int i = 0; i < ButtonForDeco.Count; i++)
+        {
+            ButtonForDeco[i].SetActive(false);
+        }
+    }
     void Update()
     {
         var mouseScreenPos = Input.mousePosition;
         mouseScreenPos.z = Camera.main.WorldToScreenPoint(transform.position).z;
         if (Input.GetKeyDown(KeyCode.Delete))
             Destroy(currentObject.gameObject, 2);
-
-        if (lastObject != null)
+        if (currentObject != null)
         {
             if (currentObject.Done)
             {
                 Obj o = new Obj();
                 o.objets = currentObject;
                 o.nom = currentObject.nom;
-                if (!search(o))
+                if (search(o) == -1)
                     JarBDD.Add(o);
             }
+            if(currentObject.takeObject)
+            {
+                for (int i = 0; i < ButtonForDeco.Count; i++)
+                {
+                    ButtonForDeco[i].SetActive(true);
+                }
+
+            }
+        }
+        if (lastObject != null)
+        {
             if (lastObject.Done)
             {
                 Obj o = new Obj();
                 o.objets = lastObject;
                 o.nom = lastObject.nom;
-                if (!search(o))
+                if (search(o) == -1)
                     JarBDD.Add(o);
             }
         }
@@ -66,16 +84,17 @@ public class GameManager : MonoBehaviour
             lastObject.Done = true;
         }
     }
-    bool search(Obj obj)
+    int search(Obj obj)
     {
         for (int i = 0; i < JarBDD.Count; i++)
         {
             if (JarBDD[i].objets == obj.objets)
-                return true;
+                return i;
         }
 
-        return false;
+        return -1;
     }
+
 
 
     public void DeleteAllChild()
@@ -90,6 +109,36 @@ public class GameManager : MonoBehaviour
         JarBDD.Clear();
 
     }
-    
+    public void ClickValidate()
+    {
+        currentObject.Done = true;
+        Obj o = new Obj();
+        o.objets = currentObject;
+        o.nom = currentObject.nom;
+        
+
+        if (search(o) == -1)
+            JarBDD.Add(o);
+        for (int i = 0; i < ButtonForDeco.Count; i++)
+        {
+            ButtonForDeco[i].SetActive(false);
+        }
+    }
+    public void ClickDelete()
+    {
+        Obj o = new Obj();
+        o.objets = currentObject;
+        o.nom = currentObject.nom;
+        int index = search(o);
+
+        if (index != -1)
+            JarBDD.RemoveAt(index);
+
+        Destroy(currentObject.gameObject, 0.3f);
+        for (int i = 0; i < ButtonForDeco.Count; i++)
+        {
+            ButtonForDeco[i].SetActive(false);
+        }
+    }
 
 }
