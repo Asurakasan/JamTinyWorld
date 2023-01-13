@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-//public enum Test { a,b,c}
 
 
 public class MainGame : MonoBehaviour
 {
-    //public List<Test> test;
+    public Transform ParentJar;
     public GameObject PrefabTask;
     public List<Animal> Animals;
     public int Money = 0;
@@ -23,7 +22,7 @@ public class MainGame : MonoBehaviour
     {
         Instance = this;
     }
-    // Start is called before the first frame update
+
     void Start()
     {
         _requirementsUI = GetComponent<RequirementsUI>();
@@ -31,9 +30,9 @@ public class MainGame : MonoBehaviour
         CurrentAnimal = Animals[_currentAnimal];
         _requirementsUI.SwitchRequirement();
         _descriptionUI.SwitchContentDescription();
+        PopObject();
     }
 
-    // Update is called once per frame
     void Update()
     {
         _requirementsUI.UITaskEnded();
@@ -58,15 +57,32 @@ public class MainGame : MonoBehaviour
         GameManager.instance.ClearJarBDD();
         _requirementsUI.SwitchRequirement();
         _descriptionUI.SwitchContentDescription();
+        PopObject();
     }
 
+    public void PopObject()
+    {
+        GameObject go = Instantiate(CurrentAnimal.Jar, ParentJar);
 
+        var pos = transform.position;
+
+        //foreach (var item in CurrentAnimal.AnimalsVisual)
+        //{
+        //    Instantiate(item, transform);
+        //    pos.x += 2;
+        //    transform.transform.position = pos;
+        //}
+        for (int x = 0; x < CurrentAnimal.AnimalsVisual.Count; x++)
+        {
+            Instantiate(CurrentAnimal.AnimalsVisual[x], ParentJar);
+            pos.x += 2 * x;
+            CurrentAnimal.AnimalsVisual[x].transform.position = pos;
+        }
+    }
 
     void CountObjectBDD()
     {
         int tempCount = 0;
-
-
 
         for (int j = 0; j < CurrentAnimal.Tasks.Count; j++)
         {

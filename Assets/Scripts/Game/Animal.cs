@@ -8,6 +8,8 @@ public class Animal
 {
     public string Name;
     public Sprite Sprite;
+    public GameObject Jar;
+    public List<GameObject> AnimalsVisual;
     [TextArea] public string Description;
     public List<Task> Tasks;
 }
