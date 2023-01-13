@@ -2297,7 +2297,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 140916846}
   m_HandleRect: {fileID: 140916845}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3171,10 +3171,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b42d690ebd4ade4884d947762fda7ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ParentJar: {fileID: 0}
   PrefabTask: {fileID: 3077085112627090647, guid: 79913730a186b6f4196b260c86e51815, type: 3}
   Animals:
   - Name: pierre
     Sprite: {fileID: 21300000, guid: f09eae8c0ea04254b90c5386a034a225, type: 3}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: poisson rouge de tres petite taille
     Tasks:
     - Name: 
@@ -3194,6 +3197,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Paul
     Sprite: {fileID: 21300000, guid: f9161c6c9e06dc445ada3ee16d991f90, type: 3}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: dfdfqdfq
     Tasks:
     - Name: 
@@ -3203,6 +3208,8 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Jack
     Sprite: {fileID: 21300000, guid: 02800fb9cff14da47a04572790384d8b, type: 3}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: 3
     Tasks:
     - Name: 
@@ -3212,16 +3219,22 @@ MonoBehaviour:
       TaskEnded: 0
   - Name: Jacki
     Sprite: {fileID: 21300000, guid: 144aa74618b85974a9a50f612c2fa8fd, type: 3}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: 4
     Tasks: []
   - Name: Michel
     Sprite: {fileID: 21300000, guid: f73a7d8758d7be04588b15637d94b5a8, type: 3}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: 5
     Tasks: []
   Money: 0
   CurrentAnimal:
     Name: Poisson
     Sprite: {fileID: 0}
+    Jar: {fileID: 0}
+    AnimalsVisual: []
     Description: un petit poisson dans l'eau
     Tasks: []
   Pause: 0
@@ -3757,7 +3770,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 670.1583, y: -520.7224}
+  m_AnchoredPosition: {x: 671.5, y: -502.72}
   m_SizeDelta: {x: 187.498, y: 45.445}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &882478381
@@ -6600,8 +6613,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 893.9275, y: 325.02203}
-  m_SizeDelta: {x: 113.828, y: 41.956}
+  m_AnchoredPosition: {x: 893.9275, y: 326.884}
+  m_SizeDelta: {x: 113.828, y: 45.681}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1642257986
 MonoBehaviour:
