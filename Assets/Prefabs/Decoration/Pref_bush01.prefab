@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2046998966724964175}
   - component: {fileID: -492757975735196556}
   - component: {fileID: 6436354425732211586}
+  - component: {fileID: 8207669828788138909}
   m_Layer: 0
   m_Name: Pref_bush01
   m_TagString: Untagged
@@ -121,3 +122,16 @@ MonoBehaviour:
   takeObject: 0
   Done: 0
   ScrollSensitivity: 20
+--- !u!65 &8207669828788138909
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 533846734486638234}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.0027014138, y: 0.0020120821, z: 0.0015779648}
+  m_Center: {x: -0.00027871557, y: -0.000038221755, z: 0.00065419835}

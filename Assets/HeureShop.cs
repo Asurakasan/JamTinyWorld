@@ -35,8 +35,7 @@ public class HeureShop : MonoBehaviour
         ActiveThis.SetActive(false);
         for (int i = 0; i < ActiveFalse.Count; i++)
         {
-            if(index != 0)
-                ActiveFalse[i].SetActive(false);
+           ActiveFalse[i].SetActive(false);
         }
     }
 }

@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 
 
 public class MainGame : MonoBehaviour
 {
+    public Text moneyText;
     public Transform ParentJar;
     public GameObject PrefabTask;
     public List<Animal> Animals;
@@ -35,6 +37,7 @@ public class MainGame : MonoBehaviour
 
     void Update()
     {
+        moneyText.text = Money.ToString();
         _requirementsUI.UITaskEnded();
         CountObjectBDD();
         if (Pause)
@@ -73,18 +76,11 @@ public class MainGame : MonoBehaviour
 
         var pos = transform.position;
         
-        
-        //foreach (var item in CurrentAnimal.AnimalsVisual)
-        //{
-        //    Instantiate(item, transform);
-        //    pos.x += 2;
-        //    transform.transform.position = pos;
-        //}
+
         for (int x = 0; x < CurrentAnimal.AnimalsVisual.Count; x++)
         {
             Instantiate(CurrentAnimal.AnimalsVisual[x], ParentJar);
-            pos.x += 2 * x;
-            CurrentAnimal.AnimalsVisual[x].transform.position = pos;
+            CurrentAnimal.AnimalsVisual[x].transform.position = go.GetComponent<Jar>().SpawnPoint[Random.Range(0, go.GetComponent<Jar>().SpawnPoint.Count)].position;
         }
         WaterOrNot(go);
         GameManager.instance.InstantiateVFX(go);

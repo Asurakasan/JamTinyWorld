@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 3669879568159137065}
   - component: {fileID: 7777751145743095208}
   - component: {fileID: -6290532876908902314}
+  - component: {fileID: 7435000657613084938}
   m_Layer: 0
   m_Name: Pref_tree01
   m_TagString: Untagged
@@ -154,6 +155,19 @@ MonoBehaviour:
   takeObject: 0
   Done: 0
   ScrollSensitivity: 20
+--- !u!65 &7435000657613084938
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4153964453394024339}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6124098189246230585
 GameObject:
   m_ObjectHideFlags: 0

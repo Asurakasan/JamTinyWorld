@@ -92,8 +92,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4742359681900313299}
+<<<<<<< Updated upstream
   - component: {fileID: -5156315206588462620}
   - component: {fileID: 6910268668770689804}
+=======
+  - component: {fileID: 2456400776970458466}
+  - component: {fileID: 2030421960426245880}
+>>>>>>> Stashed changes
   m_Layer: 0
   m_Name: Pref_Starfish02
   m_TagString: Untagged
@@ -117,7 +122,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+<<<<<<< Updated upstream
 --- !u!114 &-5156315206588462620
+=======
+--- !u!65 &2456400776970458466
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5376154109566853225}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2030421960426245880
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -139,6 +161,7 @@ MonoBehaviour:
   takeObject: 0
   Done: 0
   ScrollSensitivity: 20
+<<<<<<< Updated upstream
 --- !u!64 &6910268668770689804
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -153,3 +176,5 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 0}
+=======
+>>>>>>> Stashed changes

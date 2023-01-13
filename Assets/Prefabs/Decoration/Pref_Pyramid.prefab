@@ -11,8 +11,14 @@ GameObject:
   - component: {fileID: 2479297900638946769}
   - component: {fileID: 1569477924119890548}
   - component: {fileID: 3612749548283969214}
+<<<<<<< Updated upstream
   - component: {fileID: 6108018934389220670}
   - component: {fileID: 7534327694637452330}
+=======
+  - component: {fileID: 2334025423979060000}
+  - component: {fileID: -7953952020182149786}
+  - component: {fileID: 6182113815699158670}
+>>>>>>> Stashed changes
   m_Layer: 0
   m_Name: Pref_Pyramid
   m_TagString: Untagged
@@ -85,7 +91,11 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+<<<<<<< Updated upstream
 --- !u!114 &6108018934389220670
+=======
+--- !u!114 &2334025423979060000
+>>>>>>> Stashed changes
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -97,7 +107,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367e93ef57e61ad4599b65b8cbadf13b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+<<<<<<< Updated upstream
   nom: 
+=======
+  nom: Pyramid
+>>>>>>> Stashed changes
   layerGround:
     serializedVersion: 2
     m_Bits: 8
@@ -107,7 +121,11 @@ MonoBehaviour:
   takeObject: 0
   Done: 0
   ScrollSensitivity: 20
+<<<<<<< Updated upstream
 --- !u!64 &7534327694637452330
+=======
+--- !u!64 &-7953952020182149786
+>>>>>>> Stashed changes
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,3 +139,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -964895270735209126, guid: 2648b9fd0bf29544c8844f750a414d2c, type: 3}
+<<<<<<< Updated upstream
+=======
+--- !u!65 &6182113815699158670
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2964473437718093675}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.008008488, y: 0.008008487, z: 0.008008487}
+  m_Center: {x: 0, y: 1.4282289e-17, z: 0.002010053}
+>>>>>>> Stashed changes
