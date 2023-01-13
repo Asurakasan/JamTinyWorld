@@ -111,8 +111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   nom: Bamboo
-  type: 0
-  layerMask:
+  layerGround:
     serializedVersion: 2
     m_Bits: 8
   layerJar:

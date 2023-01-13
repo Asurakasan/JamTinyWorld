@@ -3,18 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Type
-{
-    abri,
-    plante,
-    nourriture,
-    decoration
-}
+
 public class DragDrop : MonoBehaviour
 {
     public string nom;
-    public Type type;
-    public LayerMask layerMask; 
+    [Header("----------------------------------DEV----------------------------------------")]
+    public LayerMask layerGround; 
     public LayerMask layerJar; 
     Vector3 offset;
     Plane plane = new Plane(Vector3.up, 0);
@@ -53,7 +47,7 @@ public class DragDrop : MonoBehaviour
             var mouseScreenPos = Input.mousePosition;
             Ray ray = Camera.main.ScreenPointToRay(mouseScreenPos);
             RaycastHit Hit;
-            if (Physics.Raycast(ray, out Hit, float.MaxValue, layerMask))
+            if (Physics.Raycast(ray, out Hit, float.MaxValue, layerGround))
             {
                 Debug.DrawRay(Hit.point, transform.TransformDirection(Vector3.up), Color.red, 10f);
                 transform.position = Hit.point;
