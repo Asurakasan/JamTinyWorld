@@ -5,10 +5,9 @@ using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
-    
+
     public GameObject AccueilPause;
     public GameObject Parameter;
-    public GameObject Controls;
     public GameObject Credits;
 
     //public bool pause = false;
@@ -16,7 +15,6 @@ public class PauseMenu : MonoBehaviour
     {
         AccueilPause.SetActive(false);
         Parameter.SetActive(false);
-        Controls.SetActive(false);
         Credits.SetActive(false);
     }
 
@@ -24,27 +22,18 @@ public class PauseMenu : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (Parameter.activeInHierarchy == false &&
-                Controls.activeInHierarchy == false &&
-                Credits.activeInHierarchy == false)
+            if (Parameter.activeInHierarchy == false && Credits.activeInHierarchy == false)
             {
                 AccueilPause.SetActive(!AccueilPause.activeSelf);
-                //_mainGame.Pause = AccueilPause.activeSelf;
+                MainGame.Instance.Pause = AccueilPause.activeSelf;
             }
         }
-        //if (pause)
-        //{
-        //    Time.timeScale = 0;
-        //}
-        //else if (!pause)
-        //{
-        //    Time.timeScale = 1;
-        //}
+
     }
     public void OnClickResume()
     {
         AccueilPause.SetActive(false);
-       // _mainGame.Pause = false;
+        MainGame.Instance.Pause = false;
     }
     public void OnClickRestart()
     {
@@ -60,24 +49,13 @@ public class PauseMenu : MonoBehaviour
         AccueilPause.SetActive(false);
         Credits.SetActive(true);
     }
-    public void OnClickControls()
-    {
-        Controls.SetActive(true);
-        Parameter.SetActive(false);
-    }
+
     public void OnClickReturn()
     {
-        if (Controls.activeInHierarchy == true)
-        {
-            Controls.SetActive(!Controls);
-            Parameter.SetActive(true);
-        }
-        else
-        {
-            AccueilPause.SetActive(true);
-            Credits.SetActive(false);
-            Parameter.SetActive(false);
-        }
+
+        AccueilPause.SetActive(true);
+        Credits.SetActive(false);
+        Parameter.SetActive(false);
     }
     public void OnClickLeave()
     {

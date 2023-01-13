@@ -16,6 +16,7 @@ public class MainGame : MonoBehaviour
     private RequirementsUI _requirementsUI;
     private DescriptionUI _descriptionUI;
     private int _currentAnimal = 0;
+    public bool Pause = false;
     public static MainGame Instance;
     public int IntCurrentAnimal { get => _currentAnimal; }
     private void Awake()
@@ -37,6 +38,14 @@ public class MainGame : MonoBehaviour
     {
         _requirementsUI.UITaskEnded();
         CountObjectBDD();
+        if (Pause)
+        {
+            Time.timeScale = 0;
+        }
+        else if (!Pause)
+        {
+            Time.timeScale = 1;
+        }
     }
     public void ClickNext()
     {
